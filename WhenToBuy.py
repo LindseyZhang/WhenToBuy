@@ -1,16 +1,17 @@
 # coding: utf-8
-import os
+import sys, getopt
 import time
-import requests
 import yaml
 import datetime as dt
-import re
 from SmzdmCrawler import SmzdmCrawler
 from WechatSender import WechatSender
 
-with open('_config.yaml', 'r', encoding='utf-8') as f:
-    config = yaml.load(f, Loader=yaml.Loader)
+usage = "python WhenToBuy.py -h -k [key to serarch]"
 
+
+config = {}
+config['receiver_name'] = "文件传输助手"
+config['search_key'] = "switch"
 config['last_query_time'] = dt.datetime.min
 
 crawler = SmzdmCrawler()
@@ -29,7 +30,7 @@ def run():
         for data in new_data:
             message = message + ("%s - %s - %s\n%s %s[%s]\n\n" % (data['time'], data['index'], data['title'], data['price'], data['store'], data['link']))
         
-        print("new :", message)
+        print(message)
         wechatSender.sendMessageToUser(message, receiver)
 
     config['last_query_time'] = start_query_time    
@@ -42,7 +43,20 @@ def filter(datalist, query_time):
     return new_data
 
 if __name__ == '__main__':
+    try:
+        opts, args = getopt.getopt(sys.argv[1:], "h:k:", ["help", "key="])
+    except getopt.GetoptError:
+        print(usage)
+        sys.exit(2)
+    
+    for opt, arg in opts:
+        if opt in ('-h', '--help'):
+            print(usage)
+            sys.exit()
+        elif opt in ('-k' , '--key'):
+            print("search key:", arg)
+            config['search_key'] = arg
+
     while(True):
         run()
         time.sleep(3)
-    
