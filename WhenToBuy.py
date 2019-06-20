@@ -12,11 +12,20 @@ usage = "python WhenToBuy.py \n\
 -p [必填] 发送邮件的qq邮箱授权码（如何获得授权码请参考：https://service.mail.qq.com/cgi-bin/help?subtype=1&&id=28&&no=1001256）\n\
 -r [必填] 接收邮件的地址，可以与发送邮箱相同"
 
+datetime_format = "%Y-%m-%d %H:%M:%S"
 config = {}
 config['search_key'] = "switch"
-config['last_query_time'] = dt.datetime.min
 
 crawler = SmzdmCrawler()
+
+def init():
+    try:
+        file = open("query_time.log", "r")
+        for line in file:
+            config['last_query_time'] = dt.datetime.strptime(line, datetime_format)
+        file.close()
+    except:       
+        config['last_query_time'] = dt.datetime.min
 
 def run(sender, receivers):
     print(config.get('last_query_time'))
@@ -31,7 +40,11 @@ def run(sender, receivers):
             message = message + ("%s - %s - %s\n%s %s[%s]\n\n" % (data['time'], data['index'], data['title'], data['price'], data['store'], data['link']))
         
         print(message)
-        sender.sendMessageToUser(message, receivers)
+        # sender.sendMessageToUser(message, receivers)
+
+        file = open("query_time.log", "w")
+        file.write(start_query_time.strftime(datetime_format))
+        file.close()
 
     config['last_query_time'] = start_query_time    
 
@@ -43,6 +56,7 @@ def filter(datalist, query_time):
     return new_data
 
 if __name__ == '__main__':
+    init()
     try:
         opts, args = getopt.getopt(sys.argv[1:], "h:k:s:r:p:", ["help", "key="])
     except getopt.GetoptError:
